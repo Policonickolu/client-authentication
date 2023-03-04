@@ -1,7 +1,15 @@
 import React from 'react';
+import { Navigate } from 'react-router-dom';
 
-// TODO: implement the role based guard logic
-// eslint-disable-next-line no-unused-vars
-const RoleBasedGuard = ({ accessibleRoles, children }) => <>{children}</>;
+import useAuth from '../hooks/useAuth';
+
+const RoleBasedGuard = ({ accessibleRoles, children }) => {
+  const { user } = useAuth();
+
+  if (!accessibleRoles.includes(user.role)) {
+    return <Navigate to="/" />;
+  }
+  return <>{children}</>;
+};
 
 export default RoleBasedGuard;
