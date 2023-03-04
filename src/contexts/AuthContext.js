@@ -1,16 +1,17 @@
 import { useLazyQuery } from '@apollo/client';
 import React, { createContext, useEffect, useState } from 'react';
 import { CURRENT_USER } from 'src/graphql/users/queries';
+import { getTokenFromLocalStorage, setSession } from 'src/utils/jwt';
 
 const AuthContext = createContext({});
 
 const AuthProvider = ({ children }) => {
-  // eslint-disable-next-line no-unused-vars
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
   const logout = () => {
-    // TODO: Implement the logout logic
+    setSession();
+    setIsAuthenticated(false);
   };
 
   // eslint-disable-next-line no-unused-vars
@@ -18,25 +19,40 @@ const AuthProvider = ({ children }) => {
     CURRENT_USER,
     {
       nextFetchPolicy: 'cache-and-network',
-      onCompleted: () => {
-        // TODO: Implement on completed logic
+      onCompleted: (data) => {
+        if (data) {
+          setIsAuthenticated(true);
+        }
+        return data;
       },
-      onError: () => {
-        // TODO: Implement on error logic
+      onError: (error) => {
+        if (error.graphQLErrors) {
+          error.graphQLErrors.forEach(({ extensions }) => {
+            if (extensions.code === 'UNAUTHENTICATED') {
+              logout();
+            }
+          });
+        }
       },
       refetchWritePolicy: 'overwrite',
     }
   );
 
-  // eslint-disable-next-line no-unused-vars
   const onLoginSuccess = (token) => {
-    // TODO: Implement the onLoginSuccess logic
+    setSession(token);
+    refetchCurrentUser();
   };
 
   useEffect(() => {
-    // TODO: implement the initialization logic
-    setIsInitialized(true);
-  }, []);
+    const token = getTokenFromLocalStorage();
+    if (!token) {
+      setIsInitialized(true);
+    } else {
+      refetchCurrentUser().finally(() => {
+        setIsInitialized(true);
+      });
+    }
+  }, [refetchCurrentUser]);
 
   return (
     <AuthContext.Provider

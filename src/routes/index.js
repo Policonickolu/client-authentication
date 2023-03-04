@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from 'react';
-import { useRoutes } from 'react-router-dom';
+import { Navigate, useRoutes } from 'react-router-dom';
 import LoadingScreen from 'src/components/LoadingScreen';
 import USER_ROLES from 'src/constants/userRoles';
 import AuthGuard from 'src/guards/AuthGuard';
@@ -62,8 +62,7 @@ const Router = () =>
       path: '',
     },
     {
-      // TODO: Implement a "catch all" route that Navigate to the / page when hit a non-existing page
-      element: 'Remove this, and navigate to user root.',
+      element: <Navigate to="/" />,
       path: '*',
     },
   ]);
